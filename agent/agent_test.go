@@ -1,10 +1,13 @@
 package agent
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/config"
+	"github.com/influxdata/telegraf/models"
 	_ "github.com/influxdata/telegraf/plugins/inputs/all"
 	_ "github.com/influxdata/telegraf/plugins/outputs/all"
 	"github.com/stretchr/testify/assert"
@@ -17,6 +20,54 @@ func TestAgent_OmitHostname(t *testing.T) {
 	_, err := NewAgent(c)
 	assert.NoError(t, err)
 	assert.NotContains(t, c.Tags, "host")
+}
+
+type testIgnoreErrorInput struct {
+}
+
+func (i *testIgnoreErrorInput) Init() error {
+	return fmt.Errorf("could not initialize input: test error")
+}
+
+func (i *testIgnoreErrorInput) Gather(telegraf.Accumulator) error {
+	return nil
+}
+func (i *testIgnoreErrorInput) SampleConfig() string {
+	return ""
+}
+
+func TestAgent_IgnoreErrorInputs(t *testing.T) {
+	c := config.NewConfig()
+	assert.False(t, c.Agent.IgnoreErrorInputs)
+	inputs := make([]*models.RunningInput, 0)
+	inputs = append(inputs, &models.RunningInput{})
+	c.Inputs = inputs
+	a, err := NewAgent(c)
+	assert.NoError(t, err)
+	a.initPlugins()
+	assert.Equal(t, 1, len(c.Inputs))
+
+	errorInputs := make([]*models.RunningInput, 0)
+	errorInput := &models.RunningInput{
+		Config: &models.InputConfig{
+			Name:     "test error input",
+			Alias:    "test alias",
+			Interval: 10 * time.Second,
+		},
+		Input: &testIgnoreErrorInput{},
+	}
+	errorInputs = append(errorInputs, errorInput)
+	c.Inputs = errorInputs
+	a, err = NewAgent(c)
+	assert.NoError(t, err)
+	err = a.initPlugins()
+	assert.Error(t, err)
+
+	c.Agent.IgnoreErrorInputs = true
+	c.Inputs = errorInputs
+	err = a.initPlugins()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(c.Inputs))
 }
 
 func TestAgent_LoadPlugin(t *testing.T) {
