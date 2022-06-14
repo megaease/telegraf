@@ -251,6 +251,11 @@ The agent table configures Telegraf and the defaults used across all plugins.
   translates by calling external programs snmptranslate and snmptable,
   or "gosmi" which translates using the built-in gosmi library.
 
+- **ignore_error_inputs**:
+  If set to true, Discard the Inputs that are error during initialization.
+  If set to false, When there is an Input exception during initialization, the Telegraf program will exit directly.
+  Default: false
+
 ## Plugins
 
 Telegraf plugins are divided into 4 types: [inputs][], [outputs][],

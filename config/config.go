@@ -421,6 +421,9 @@ var agentConfig = `
   ## Example: America/Chicago
   # log_with_timezone = ""
 
+  ## Ignore Inputs that error to initialize
+  # ignore_error_inputs = true
+
   ## Override default hostname, if empty use os.Hostname()
   hostname = ""
   ## If set to true, do no set the "host" tag in the telegraf agent.
