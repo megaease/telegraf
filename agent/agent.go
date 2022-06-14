@@ -193,8 +193,8 @@ func (a *Agent) initPlugins() error {
 			tp.SetTranslator(a.Config.Agent.SnmpTranslator)
 		}
 		err := input.Init()
-		if err != nil && a.Config.Agent.IgnoreInitFailInput {
-			log.Printf("W! [agent] Ignore initialize fail input %s: %v", input.LogName(), err)
+		if err != nil && a.Config.Agent.IgnoreErrorInputs {
+			log.Printf("W! [agent] Ignore initialize error input %s: %v", input.LogName(), err)
 			continue
 		} else if err != nil {
 			return fmt.Errorf("could not initialize input %s: %v",
