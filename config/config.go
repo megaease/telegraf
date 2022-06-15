@@ -421,7 +421,8 @@ var agentConfig = `
   ## Example: America/Chicago
   # log_with_timezone = ""
 
-  ## Ignore Inputs that error to initialize
+  ## Indicated whether ignore input plugins that produce the error during the initialization.
+
   # ignore_error_inputs = true
 
   ## Override default hostname, if empty use os.Hostname()
