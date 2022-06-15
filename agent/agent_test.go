@@ -59,7 +59,6 @@ func TestAgent_IgnoreErrorInputs(t *testing.T) {
 	assert.Error(t, err)
 
 	c.Agent.IgnoreErrorInputs = true
-	c.Inputs = errorInputs
 	err = a.initPlugins()
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(c.Inputs))
