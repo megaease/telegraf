@@ -252,7 +252,7 @@ The agent table configures Telegraf and the defaults used across all plugins.
   or "gosmi" which translates using the built-in gosmi library.
 
 - **ignore_error_inputs**:
-  If set to true, Discard the Inputs that are error during initialization.
+  If set to true, discard the input plugins that produce the error during initialization.
   If set to false, When there is an Input exception during initialization, the Telegraf program will exit directly.
   Default: false
 
