@@ -45,8 +45,7 @@ func TestAgent_IgnoreErrorInputs(t *testing.T) {
 	a.initPlugins()
 	assert.Equal(t, 1, len(c.Inputs))
 
-	errorInputs := make([]*models.RunningInput, 0)
-	errorInput := &models.RunningInput{
+	c.Inputs = []*models.RunningInput {
 		Config: &models.InputConfig{
 			Name:     "test error input",
 			Alias:    "test alias",
@@ -54,8 +53,6 @@ func TestAgent_IgnoreErrorInputs(t *testing.T) {
 		},
 		Input: &testIgnoreErrorInput{},
 	}
-	errorInputs = append(errorInputs, errorInput)
-	c.Inputs = errorInputs
 	a, err = NewAgent(c)
 	assert.NoError(t, err)
 	err = a.initPlugins()
