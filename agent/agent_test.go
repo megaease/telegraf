@@ -39,9 +39,7 @@ func (i *testIgnoreErrorInput) SampleConfig() string {
 func TestAgent_IgnoreErrorInputs(t *testing.T) {
 	c := config.NewConfig()
 	assert.False(t, c.Agent.IgnoreErrorInputs)
-	inputs := make([]*models.RunningInput, 0)
-	inputs = append(inputs, &models.RunningInput{})
-	c.Inputs = inputs
+	c.Inputs =  []*models.RunningInput { &models.RunningInput{} }
 	a, err := NewAgent(c)
 	assert.NoError(t, err)
 	a.initPlugins()
