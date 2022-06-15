@@ -423,7 +423,7 @@ var agentConfig = `
 
   ## Indicated whether ignore input plugins that produce the error during the initialization.
 
-  # ignore_error_inputs = true
+  # ignore_error_inputs = false
 
   ## Override default hostname, if empty use os.Hostname()
   hostname = ""
