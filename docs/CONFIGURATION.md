@@ -253,7 +253,7 @@ The agent table configures Telegraf and the defaults used across all plugins.
 
 - **ignore_error_inputs**:
   If set to true, discard the input plugins that produce the error during initialization.
-  If set to false, When there is an Input exception during initialization, the Telegraf program will exit directly.
+  If set to false, the program will exit when an input plugin has an error occurred during the initialization.
   Default: false
 
 ## Plugins
