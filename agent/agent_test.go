@@ -39,20 +39,20 @@ func (i *testIgnoreErrorInput) SampleConfig() string {
 func TestAgent_IgnoreErrorInputs(t *testing.T) {
 	c := config.NewConfig()
 	assert.False(t, c.Agent.IgnoreErrorInputs)
-	c.Inputs =  []*models.RunningInput { &models.RunningInput{} }
+	c.Inputs = []*models.RunningInput{{}}
 	a, err := NewAgent(c)
 	assert.NoError(t, err)
 	a.initPlugins()
 	assert.Equal(t, 1, len(c.Inputs))
 
-	c.Inputs = []*models.RunningInput {
+	c.Inputs = []*models.RunningInput{{
 		Config: &models.InputConfig{
 			Name:     "test error input",
 			Alias:    "test alias",
 			Interval: 10 * time.Second,
 		},
 		Input: &testIgnoreErrorInput{},
-	}
+	}}
 	a, err = NewAgent(c)
 	assert.NoError(t, err)
 	err = a.initPlugins()
