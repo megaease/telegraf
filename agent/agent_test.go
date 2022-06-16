@@ -36,15 +36,15 @@ func TestAgent_isIgnoreInput(t *testing.T) {
 	assert.False(t, a.isIgnoreInput(input))
 
 	a.Config.Agent.IgnoreErrorInputs = true
-	// default: input.ignore_init_error=false and agent.ignore_error_inputs=true
+	// input.ignore_init_error=false and agent.ignore_error_inputs=true
 	assert.True(t, a.isIgnoreInput(input))
 
 	input.Config.IgnoreInitError = true
-	// default: input.ignore_init_error=true and agent.ignore_error_inputs=true
+	// input.ignore_init_error=true and agent.ignore_error_inputs=true
 	assert.True(t, a.isIgnoreInput(input))
 
 	a.Config.Agent.IgnoreErrorInputs = false
-	// default: input.ignore_init_error=false and agent.ignore_error_inputs=false
+	// input.ignore_init_error=false and agent.ignore_error_inputs=false
 	assert.True(t, a.isIgnoreInput(input))
 
 }
