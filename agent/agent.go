@@ -186,12 +186,6 @@ func (a *Agent) Run(ctx context.Context) error {
 
 // determine whether to ignore the Input of the error
 // It has two option: input.ignore_init_error and agent.ignore_error_inputs
-// | input.ignore_init_error | agent.ignore_error_inputs |   Is Ignore    |
-// | ----------------------- | ------------------------- | -------------- |
-// |          true           |            true           |     true       |
-// |          true           |            false          |     true       |
-// |          false          |            true           |     true       |
-// |      false(default)     |        false(default)     | false(default) |
 func (a *Agent) isIgnoreInput(errInput *models.RunningInput) bool {
 	return errInput.Config.IgnoreInitError || a.Config.Agent.IgnoreErrorInputs
 }
