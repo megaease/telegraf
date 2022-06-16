@@ -319,20 +319,9 @@ Parameters that can be used with any input plugin:
 - **ignore_init_error**:
   Together with agent.ignore_error_inputs it forms a configuration: 
 
-  If (ignore_init_error || agent.ignore_error_inputs) is true, discard the input plugin that produce the error during initialization.
-
-  If (ignore_init_error || agent.ignore_error_inputs) is false, the program will exit when the input plugin has an error occurred during the initialization.
+  If (ignore_init_error || agent.ignore_error_inputs) is true, discard the input plugin that produce the error during initialization. Otherwise, the program will exit when the input plugin has an error occurred during the initialization.
 
   Default: false
-
-  | input.ignore_init_error | agent.ignore_error_inputs |   Is Ignore    |
-  |:-----------------------:|:-------------------------:|:--------------:|
-  |          true           |            true           |     true       |
-  |          true           |            false          |     true       |
-  |          false          |            true           |     true       |
-  |      false(default)     |        false(default)     | false(default) |
-
-
 - **name_prefix**: Specifies a prefix to attach to the measurement name.
 
 - **name_suffix**: Specifies a suffix to attach to the measurement name.
