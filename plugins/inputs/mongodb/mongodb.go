@@ -32,6 +32,7 @@ type MongoDB struct {
 	GatherPerdbStats    bool
 	GatherColStats      bool
 	GatherTopStat       bool
+	SkipPingAtInit      bool
 	ColStatsDbs         []string
 	tlsint.ClientConfig
 
@@ -108,9 +109,10 @@ func (m *MongoDB) Init() error {
 			return fmt.Errorf("unable to connect to MongoDB: %q", err)
 		}
 
-		err = client.Ping(ctx, opts.ReadPreference)
-		if err != nil {
-			return fmt.Errorf("unable to connect to MongoDB: %s", err)
+		if m.SkipPingAtInit {
+			m.Log.Infof("skip ping at initialization to MongoDB: %q", connURL)
+		} else if err := client.Ping(ctx, opts.ReadPreference); err != nil {
+			return fmt.Errorf("unable to ping to MongoDB: %s", err)
 		}
 
 		server := &Server{
