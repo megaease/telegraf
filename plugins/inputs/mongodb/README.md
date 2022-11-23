@@ -41,8 +41,7 @@ All MongoDB server versions from 2.6 and higher are supported.
   # insecure_skip_verify = false
 
   ## Skip Ping at initialization
-  ## If you are not sure that your mongodb is already running, skipping the ping operation will allow you to run Telegraf normally and mongodb will try to reconnect by itself
-  # skip_ping_at_init = false
+  # skip_ping_at_init = true
 ```
 
 ### Permissions
@@ -314,4 +313,6 @@ mongodb_db_stats,db_name=local,hostname=127.0.0.1:27017 avg_obj_size=813.9705882
 mongodb_col_stats,collection=foo,db_name=local,hostname=127.0.0.1:27017 size=375005928i,avg_obj_size=5494,type="col_stat",storage_size=249307136i,total_index_size=2138112i,ok=1i,count=68251i 1547159491000000000
 mongodb_shard_stats,hostname=127.0.0.1:27017,in_use=3i,available=3i,created=4i,refreshing=0i 1522799074000000000
 mongodb_top_stats,collection=foo,total_time=1471,total_count=158,read_lock_time=49614,read_lock_count=657,write_lock_time=49125456,write_lock_count=9841,queries_time=174,queries_count=495,get_more_time=498,get_more_count=46,insert_time=2651,insert_count=1265,update_time=0,update_count=0,remove_time=0,remove_count=0,commands_time=498611,commands_count=4615
+```
+5,get_more_time=498,get_more_count=46,insert_time=2651,insert_count=1265,update_time=0,update_count=0,remove_time=0,remove_count=0,commands_time=498611,commands_count=4615
 ```
