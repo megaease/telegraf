@@ -16,11 +16,15 @@ Support the kafka's verson must greater than 0.10.2.
 
   ## Topics interested in offset and lag 
   ## (regexp, default is ".*" represents all topics, )
-  topics = .*
+  topics = ".*"
 
   ## ConsumerGroups interested in offset and lag 
   ## (regexp, default is ".*" represents all consumer groups)
-  consumer_groups = .*
+  consumer_groups = ".*"
+
+  ## ExcludeTopics exclude uninterested topics
+  ## (regexp, default is "", represents excluding none topics)
+  exclude_topics = "__.*"
 
   ## Optional Client id
   # client_id = "Telegraf"

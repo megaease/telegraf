@@ -11,7 +11,6 @@ import (
 	"github.com/Shopify/sarama"
 
 	"github.com/influxdata/telegraf"
-	"github.com/influxdata/telegraf/config"
 	"github.com/influxdata/telegraf/plugins/common/kafka"
 	"github.com/influxdata/telegraf/plugins/inputs"
 )
@@ -20,45 +19,38 @@ import (
 //go:embed sample.conf
 var sampleConfig string
 
-const (
-	defaultMaxUndeliveredMessages = 1000
-	defaultMaxProcessingTime      = config.Duration(100 * time.Millisecond)
-	defaultConsumerGroup          = "telegraf_metrics_consumers"
-	reconnectDelay                = 5 * time.Second
+type (
+	kafkaTopicConsumer struct {
+		Brokers        []string        `toml:"brokers"`
+		ConsumerGroups string          `toml:"consumer_groups"`
+		Topics         string          `toml:"topics"`
+		ExcludeTopics  string          `toml:"exclude_topics"`
+		Log            telegraf.Logger `toml:"-"`
+
+		kafka.ReadConfig
+		config *sarama.Config `toml:"-"`
+
+		client sarama.Client `toml:"-"`
+
+		topicFilter   *regexp.Regexp `toml:"-"`
+		groupFilter   *regexp.Regexp `toml:"-"`
+		excludeTopics *regexp.Regexp `toml:"-"`
+	}
+
+	groupLag struct {
+		groupID   string
+		topic     string
+		lagSum    int64
+		offsetSum int64
+		items     []groupLagItem
+	}
+
+	groupLagItem struct {
+		partition int32
+		lag       int64
+		offset    int64
+	}
 )
-
-type empty struct{}
-type semaphore chan empty
-
-type kafkaTopicConsumer struct {
-	Brokers        []string        `toml:"brokers"`
-	ConsumerGroups string          `toml:"consumer_groups"`
-	Topics         string          `toml:"topics"`
-	TopicTag       string          `toml:"topic_tag"`
-	Log            telegraf.Logger `toml:"-"`
-
-	kafka.ReadConfig
-	config *sarama.Config `toml:"-"`
-
-	client sarama.Client `toml:"-"`
-
-	topicFilter *regexp.Regexp `toml:"-"`
-	groupFilter *regexp.Regexp `toml:"-"`
-}
-
-type groupLag struct {
-	groupID   string
-	topic     string
-	lagSum    int64
-	offsetSum int64
-	items     []groupLagItem
-}
-
-type groupLagItem struct {
-	partition int32
-	lag       int64
-	offset    int64
-}
 
 func init() {
 	inputs.Add("kafka_topic_consumer", func() telegraf.Input {
@@ -80,7 +72,7 @@ func (k *kafkaTopicConsumer) Gather(acc telegraf.Accumulator) error {
 
 	topicPartitionsOffsets := make(map[string]map[int32]int64)
 	for _, topic := range topics {
-		if topic == "" || !k.topicFilter.MatchString(topic) {
+		if topic == "" || !k.topicFilter.MatchString(topic) || (k.excludeTopics != nil && k.excludeTopics.MatchString(topic)) {
 			continue
 		}
 		topicPartitionsOffsets[topic], err = k.fetchTopicPartitionOffset(topic)
@@ -98,7 +90,7 @@ func (k *kafkaTopicConsumer) Gather(acc telegraf.Accumulator) error {
 	groupLags := make([]groupLag, 0)
 	for _, broker := range brokers {
 		wg.Add(1)
-		go func() {
+		go func(broker *sarama.Broker) {
 			defer wg.Done()
 			if err := broker.Open(k.client.Config()); err != nil && err != sarama.ErrAlreadyConnected {
 				k.Log.Errorf("cannot connect to broker %d: %v", broker.ID(), err)
@@ -107,7 +99,7 @@ func (k *kafkaTopicConsumer) Gather(acc telegraf.Accumulator) error {
 
 			groupLag := k.fetchLagData(broker, topicPartitionsOffsets)
 			groupLags = append(groupLags, groupLag...)
-		}()
+		}(broker)
 	}
 	wg.Wait()
 
@@ -287,6 +279,10 @@ func (k *kafkaTopicConsumer) Init() error {
 
 	k.groupFilter = regexp.MustCompile(k.ConsumerGroups)
 	k.topicFilter = regexp.MustCompile(k.Topics)
+
+	if k.ExcludeTopics != "" {
+		k.excludeTopics = regexp.MustCompile(k.ExcludeTopics)
+	}
 
 	k.Log.Debugf("initialize kafka_topic_consumer input plugin succeed")
 	return nil
