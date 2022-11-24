@@ -61,6 +61,8 @@ See the [CONFIGURATION.md][CONFIGURATION.md] for more details.
   ##   - error: telegraf will return an error on startup if one the servers is unreachable
   ##   - skip: telegraf will skip unreachable servers on both startup and gather
   # disconnected_servers_behavior = "error"
+  ## Skip Ping at initialization
+  # skip_ping_at_init = true
 ```
 
 ### Permissions

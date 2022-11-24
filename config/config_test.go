@@ -138,6 +138,26 @@ func TestConfig_LoadSingleInput(t *testing.T) {
 	require.Equal(t, inputConfig, c.Inputs[0].Config, "Testdata did not produce correct memcached metadata.")
 }
 
+func TestConfig_ignoreErrorInput(t *testing.T) {
+	c := NewConfig()
+	c.InputFilters = []string{"memcached"}
+	err := c.LoadConfig("./testdata/ignore_error_input.toml")
+	require.NoError(t, err)
+	require.True(t, c.Inputs[0].Config.IgnoreInitError)
+
+	c = NewConfig()
+	c.InputFilters = []string{"http_listener_v2"}
+	err = c.LoadConfig("./testdata/ignore_error_input.toml")
+	require.NoError(t, err)
+	require.False(t, c.Inputs[0].Config.IgnoreInitError)
+
+	c = NewConfig()
+	c.InputFilters = []string{"ignore_init_error_test"}
+	err = c.LoadConfig("./testdata/ignore_error_input.toml")
+	require.NoError(t, err)
+	require.False(t, c.Inputs[0].Config.IgnoreInitError)
+}
+
 func TestConfig_LoadDirectory(t *testing.T) {
 	c := NewConfig()
 	require.NoError(t, c.LoadConfig("./testdata/single_plugin.toml"))
@@ -1106,6 +1126,8 @@ func init() {
 	processors.Add("processor_parserfunc", func() telegraf.Processor {
 		return &MockupProcessorPluginParserFunc{}
 	})
+
+	inputs.Add("ignore_init_error_test", func() telegraf.Input { return &MockupInputPlugin{} })
 
 	// Register the mockup output plugin for the required names
 	outputs.Add("azure_monitor", func() telegraf.Output {

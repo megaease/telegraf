@@ -35,6 +35,7 @@ type MongoDB struct {
 	GatherColStats              bool
 	GatherTopStat               bool
 	DisconnectedServersBehavior string
+	SkipPingAtInit              bool
 	ColStatsDbs                 []string
 	tlsint.ClientConfig
 
@@ -124,13 +125,10 @@ func (m *MongoDB) Start(telegraf.Accumulator) error {
 			return fmt.Errorf("unable to connect to MongoDB: %w", err)
 		}
 
-		err = client.Ping(ctx, opts.ReadPreference)
-		if err != nil {
-			if m.DisconnectedServersBehavior == "error" {
-				return fmt.Errorf("unable to ping MongoDB: %w", err)
-			}
-
-			m.Log.Errorf("unable to ping MongoDB: %w", err)
+		if m.SkipPingAtInit {
+			m.Log.Infof("skip ping at initialization to MongoDB: %q", connURL)
+		} else if err := client.Ping(ctx, opts.ReadPreference); err != nil {
+			return fmt.Errorf("unable to ping to MongoDB: %s", err)
 		}
 
 		server := &Server{

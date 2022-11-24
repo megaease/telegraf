@@ -214,6 +214,9 @@ type AgentConfig struct {
 	// Pick a timezone to use when logging or type 'local' for local time.
 	LogWithTimezone string `toml:"log_with_timezone"`
 
+	// Ignore Inputs that error to initialize
+	IgnoreErrorInputs bool `toml:"ignore_error_inputs"`
+
 	Hostname     string
 	OmitHostname bool
 
@@ -1122,6 +1125,7 @@ func (c *Config) buildInput(name string, tbl *ast.Table) (*models.InputConfig, e
 	c.getFieldString(tbl, "name_suffix", &cp.MeasurementSuffix)
 	c.getFieldString(tbl, "name_override", &cp.NameOverride)
 	c.getFieldString(tbl, "alias", &cp.Alias)
+	c.getFieldBool(tbl, "ignore_init_error", &cp.IgnoreInitError)
 
 	cp.Tags = make(map[string]string)
 	if node, ok := tbl.Fields["tags"]; ok {
@@ -1259,7 +1263,7 @@ func (c *Config) missingTomlField(_ reflect.Type, key string) error {
 		"prometheus_export_timestamp", "prometheus_sort_metrics", "prometheus_string_as_label",
 		"prometheus_compact_encoding",
 		"splunkmetric_hec_routing", "splunkmetric_multimetric", "splunkmetric_omit_event_tag",
-		"wavefront_disable_prefix_conversion", "wavefront_source_override", "wavefront_use_strict":
+		"wavefront_disable_prefix_conversion", "wavefront_source_override", "wavefront_use_strict", "ignore_init_error":
 	default:
 		c.unusedFieldsMutex.Lock()
 		c.UnusedFields[key] = true
