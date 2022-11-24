@@ -41,8 +41,7 @@ All MongoDB server versions from 2.6 and higher are supported.
   # insecure_skip_verify = false
 
   ## Skip Ping at initialization
-  ## If you are not sure that your mongodb is already running, skipping the ping operation will allow you to run Telegraf normally and mongodb will try to reconnect by itself
-  # skip_ping_at_init = false
+  # skip_ping_at_init = true
 ```
 
 ### Permissions
