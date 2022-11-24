@@ -68,45 +68,5 @@ Support the kafka's verson must greater than 0.10.2.
 
   # Disable Kafka metadata full fetch
   # metadata_full = false
-
-  ## Name of the consumer group.
-  # consumer_group = "telegraf_metrics_consumers"
-
-  ## Compression codec represents the various compression codecs recognized by
-  ## Kafka in messages.
-  ##  0 : None
-  ##  1 : Gzip
-  ##  2 : Snappy
-  ##  3 : LZ4
-  ##  4 : ZSTD
-  # compression_codec = 0
-
-
-  ## Consumer group partition assignment strategy; one of "range", "roundrobin" or "sticky".
-  # balance_strategy = "range"
-
-  ## Maximum length of a message to consume, in bytes (default 0/unlimited);
-  ## larger messages are dropped
-  max_message_len = 1000000
-
-  ## Maximum messages to read from the broker that have not been written by an
-  ## output.  For best throughput set based on the number of metrics within
-  ## each message and the size of the output's metric_batch_size.
-  ##
-  ## For example, if each message from the queue contains 10 metrics and the
-  ## output metric_batch_size is 1000, setting this to 100 will ensure that a
-  ## full batch is collected and the write is triggered immediately without
-  ## waiting until the next flush_interval.
-  # max_undelivered_messages = 1000
-
-  ## Maximum amount of time the consumer should take to process messages. If
-  ## the debug log prints messages from sarama about 'abandoning subscription
-  ## to [topic] because consuming was taking too long', increase this value to
-  ## longer than the time taken by the output plugin(s).
-  ##
-  ## Note that the effective timeout could be between 'max_processing_time' and
-  ## '2 * max_processing_time'.
-  # max_processing_time = "100ms"
 ```
-
 [kafka]: https://kafka.apache.org
