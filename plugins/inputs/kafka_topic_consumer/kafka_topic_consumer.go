@@ -203,7 +203,7 @@ func (k *kafkaTopicConsumer) writeToAccumulator(groupLags []groupLag, topicPatit
 	timestamp := time.Now().UnixMilli()
 	for topic, partitions := range topicPatitionsOffsets {
 		for partition, offset := range partitions {
-			acc.AddFields("burrow_topic",
+			acc.AddFields("kafka_topic_offset",
 				map[string]interface{}{
 					"offset":    offset,
 					"timestamp": timestamp,
@@ -217,7 +217,7 @@ func (k *kafkaTopicConsumer) writeToAccumulator(groupLags []groupLag, topicPatit
 
 	for _, groupLag := range groupLags {
 		for _, item := range groupLag.items {
-			acc.AddFields("burrow_partition", //
+			acc.AddFields("kafka_topic_partition", //
 				map[string]interface{}{
 					"lag":       item.lag,
 					"offset":    item.offset,
@@ -231,7 +231,7 @@ func (k *kafkaTopicConsumer) writeToAccumulator(groupLags []groupLag, topicPatit
 			)
 		}
 
-		acc.AddFields("burrow_group",
+		acc.AddFields("kafka_group_topic",
 			map[string]interface{}{
 				"total_lag":       groupLag.lagSum,
 				"lag":             groupLag.lagSum,
@@ -241,6 +241,7 @@ func (k *kafkaTopicConsumer) writeToAccumulator(groupLags []groupLag, topicPatit
 			},
 			map[string]string{
 				"group": groupLag.groupID,
+				"topic": groupLag.topic,
 			})
 	}
 
