@@ -38,11 +38,14 @@ type (
 	}
 
 	groupLag struct {
-		groupID   string
-		topic     string
-		lagSum    int64
+		groupID string
+		topic   string
+		lagSum  int64
+		// topic total offset of produced messages.
 		offsetSum int64
-		items     []groupLagItem
+		// consumer consumes message at currrent offset of a topic.
+		currentOffsetSum int64
+		items            []groupLagItem
 	}
 
 	groupLagItem struct {
@@ -143,6 +146,7 @@ func (k *kafkaTopicConsumer) fetchLagData(broker *sarama.Broker, topicPatitionsO
 		offsetFetchResponse := k.getGroupAllTopicOffset(broker, group, topicPatitionsOffsets)
 		for topic, partitions := range offsetFetchResponse.Blocks {
 			var currentOffsetSum int64
+			var offsetSum int64
 			var lagSum int64
 			partitionConsumed := false
 			items := make([]groupLagItem, 0)
@@ -152,8 +156,9 @@ func (k *kafkaTopicConsumer) fetchLagData(broker *sarama.Broker, topicPatitionsO
 					k.Log.Errorf("partition %d offset of the topic: %s and consumer group: %s error :%v", partition, topic, group, err.Error())
 					continue
 				}
-				currentOffset := offsetResponseBlock.Offset
-				currentOffsetSum += currentOffset
+				if offsetResponseBlock.Offset != -1 {
+					currentOffsetSum += offsetResponseBlock.Offset
+				}
 				// consume offset
 
 				if offset, ok := topicPatitionsOffsets[topic][partition]; ok {
@@ -165,6 +170,7 @@ func (k *kafkaTopicConsumer) fetchLagData(broker *sarama.Broker, topicPatitionsO
 						lag = offset - offsetResponseBlock.Offset
 					}
 					lagSum += lag // no matter what partition
+					offsetSum += offset
 					// lag
 					items = append(items, groupLagItem{lag: lag, partition: partition, offset: offset})
 				} else {
@@ -172,11 +178,15 @@ func (k *kafkaTopicConsumer) fetchLagData(broker *sarama.Broker, topicPatitionsO
 				}
 			}
 			if !partitionConsumed {
-				k.Log.Debugf("the current group: %s hasn't insterest with the topic: %s , skipd", group, topic)
+				k.Log.Debugf("the current group: %s hasn't insterest with the topic: %s , ignored", group, topic)
 				continue
 			}
 			// currentOffsetSum, lagSum (all topic)
-			result = append(result, groupLag{topic: topic, groupID: group, lagSum: lagSum, offsetSum: currentOffsetSum, items: items})
+			result = append(result, groupLag{topic: topic, groupID: group,
+				lagSum:           lagSum,
+				offsetSum:        offsetSum,
+				currentOffsetSum: currentOffsetSum,
+				items:            items})
 		}
 	}
 	return result
@@ -233,11 +243,12 @@ func (k *kafkaTopicConsumer) writeToAccumulator(groupLags []groupLag, topicPatit
 
 		acc.AddFields("kafka_group_topic",
 			map[string]interface{}{
-				"total_lag":       groupLag.lagSum,
-				"lag":             groupLag.lagSum,
-				"offset_sum":      groupLag.offsetSum,
-				"timestamp":       timestamp,
-				"partition_count": len(groupLag.items),
+				"total_lag":          groupLag.lagSum,
+				"lag":                groupLag.lagSum,
+				"offset_sum":         groupLag.offsetSum,
+				"current_offset_sum": groupLag.currentOffsetSum,
+				"timestamp":          timestamp,
+				"partition_count":    len(groupLag.items),
 			},
 			map[string]string{
 				"group": groupLag.groupID,

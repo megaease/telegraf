@@ -69,8 +69,6 @@ Support the kafka's verson must greater than 0.10.2.
   # Disable Kafka metadata full fetch
   # metadata_full = false
 ```
-
-
 ## Metrics
 
 ### Fields
@@ -78,7 +76,8 @@ Support the kafka's verson must greater than 0.10.2.
 * `kafka_group_topic` (one event per each consumer group)
   * partition_count (int, `number of partitions`)
   * offset_sum (int64, `total offset of all partitions`)
-  * total_lag (int64, `totallag`)
+  * current_offset_sum (int64  `total offset of consumers to consume message`)
+  * total_lag (int64, `total lag`)
   * lag (int64, `always equal to total_lag || 0`)
   * timestamp (int64)
 
@@ -101,7 +100,6 @@ Support the kafka's verson must greater than 0.10.2.
   * group (string)
   * topic (string)
   * partition (int)
-  * owner (string)
 
 * `kafka_topic_offset`
   * topic (string)
