@@ -85,7 +85,6 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/inputs/ipvs"
 	_ "github.com/influxdata/telegraf/plugins/inputs/jenkins"
 	_ "github.com/influxdata/telegraf/plugins/inputs/jolokia"
-	_ "github.com/influxdata/telegraf/plugins/inputs/jolokia2"
 	_ "github.com/influxdata/telegraf/plugins/inputs/jti_openconfig_telemetry"
 	_ "github.com/influxdata/telegraf/plugins/inputs/kafka_consumer"
 	_ "github.com/influxdata/telegraf/plugins/inputs/kafka_consumer_legacy"
