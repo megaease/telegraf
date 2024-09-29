@@ -106,6 +106,13 @@ help:
 	@echo '   telegraf-$(tar_version)_arch.zip'
 
 
+.PHONY: build-docker
+build-docker:
+	docker buildx build --platform linux/amd64 -t megaease/telegraf:$(version) -f build/package/Dockerfile --load .
+
+build-docker-fromlocal:
+	docker buildx build --platform linux/amd64 -t megaease/telegraf:$(version) -f build/package/Dockerfile.fromlocal .
+
 .PHONY: deps
 deps:
 	go mod download -x

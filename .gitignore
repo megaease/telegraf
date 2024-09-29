@@ -1,5 +1,4 @@
 /.idea
-/build
 /etc/telegraf.conf
 /telegraf
 /telegraf.exe
