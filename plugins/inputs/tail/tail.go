@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"errors"
 	"io"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/internal"
 	"github.com/influxdata/telegraf/internal/globpath"
+	"github.com/influxdata/telegraf/metric"
 	"github.com/influxdata/telegraf/plugins/common/encoding"
 	"github.com/influxdata/telegraf/plugins/inputs"
 	"github.com/influxdata/telegraf/plugins/parsers"
@@ -39,8 +41,10 @@ var (
 	offsetsMutex = new(sync.Mutex)
 )
 
-type empty struct{}
-type semaphore chan empty
+type (
+	empty     struct{}
+	semaphore chan empty
+)
 
 type Tail struct {
 	Files               []string `toml:"files"`
@@ -50,6 +54,10 @@ type Tail struct {
 	MaxUndeliveredLines int      `toml:"max_undelivered_lines"`
 	CharacterEncoding   string   `toml:"character_encoding"`
 	PathTag             string   `toml:"path_tag"`
+	ReplacePattern      string   `toml:"replace_pattern"`
+	Replacement         string   `toml:"replacement"`
+
+	replacePatternRegexp *regexp.Regexp
 
 	Filters      []string `toml:"filters"`
 	filterColors bool
@@ -105,6 +113,14 @@ func (t *Tail) Init() error {
 	// init offsets
 	t.offsets = make(map[string]int64)
 
+	if t.ReplacePattern != "" {
+		var err error
+		t.replacePatternRegexp, err = regexp.Compile(t.ReplacePattern)
+		if err != nil {
+			return errors.New("replace_pattern is invalid")
+		}
+	}
+
 	var err error
 	t.decoder, err = encoding.NewDecoder(t.CharacterEncoding)
 	return err
@@ -149,7 +165,6 @@ func (t *Tail) Start(acc telegraf.Accumulator) error {
 
 	var err error
 	t.multiline, err = t.MultilineConfig.NewMultiline()
-
 	if err != nil {
 		return err
 	}
@@ -214,7 +229,6 @@ func (t *Tail) tailNewFiles(fromBeginning bool) error {
 						return r
 					},
 				})
-
 			if err != nil {
 				t.Log.Debugf("Failed to open file (%s): %v", file, err)
 				continue
@@ -303,17 +317,31 @@ func (t *Tail) receiver(parser telegraf.Parser, tailer *tail.Tail) {
 		}
 
 		var text string
+		var emptyAfterReplace bool
 
 		if line != nil {
 			// Fix up files with Windows line endings.
 			text = strings.TrimRight(line.Text, "\r")
 
+			if t.replacePatternRegexp != nil {
+				orginalText := text
+				text = t.replacePatternRegexp.ReplaceAllString(text, t.Replacement)
+				if orginalText != "" && text == "" {
+					emptyAfterReplace = true
+				}
+			}
+
 			if t.multiline.IsEnabled() {
+				if emptyAfterReplace {
+					text = "\n"
+				}
+
 				if text = t.multiline.ProcessLine(text, &buffer); text == "" {
 					continue
 				}
 			}
 		}
+
 		if line == nil || !channelOpen || !tailerOpen {
 			if text += t.multiline.Flush(&buffer); text == "" {
 				if !channelOpen {
@@ -337,12 +365,24 @@ func (t *Tail) receiver(parser telegraf.Parser, tailer *tail.Tail) {
 			text = string(out)
 		}
 
-		metrics, err := parseLine(parser, text)
-		if err != nil {
-			t.Log.Errorf("Malformed log line in %q: [%q]: %s",
-				tailer.Filename, text, err.Error())
-			continue
+		var metrics []telegraf.Metric
+		var err error
+
+		if emptyAfterReplace {
+			metrics = []telegraf.Metric{
+				metric.New("empty_line", nil, map[string]interface{}{
+					"log": "",
+				}, time.Now()),
+			}
+		} else {
+			metrics, err = parseLine(parser, text)
+			if err != nil {
+				t.Log.Errorf("Malformed log line in %q: [%q]: %s",
+					tailer.Filename, text, err.Error())
+				continue
+			}
 		}
+
 		if len(metrics) == 0 {
 			once.Do(func() {
 				t.Log.Debug(internal.NoMetricsCreatedMsg)

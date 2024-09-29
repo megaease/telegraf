@@ -27,9 +27,6 @@ type Multiline struct {
 }
 
 type MultilineConfig struct {
-	ReplacePattern string `toml:"replace_pattern"`
-	Replacement    string `toml:"replacement"`
-
 	StartPattern    string                  `toml:"start_pattern"`
 	Pattern         string                  `toml:"pattern"`
 	EndPattern      string                  `toml:"end_pattern"`
@@ -52,13 +49,6 @@ func (m *MultilineConfig) NewMultiline() (*Multiline, error) {
 	var startPatternRegexp *regexp.Regexp
 	var endPatternRegexp *regexp.Regexp
 	var patternRegexp *regexp.Regexp
-
-	if m.ReplacePattern != "" {
-		var err error
-		if replacePatternRegexp, err = regexp.Compile(m.ReplacePattern); err != nil {
-			return nil, errors.New("replace_pattern is invalid")
-		}
-	}
 
 	if m.StartPattern != "" {
 		if m.EndPattern == "" {
@@ -103,7 +93,7 @@ func (m *MultilineConfig) NewMultiline() (*Multiline, error) {
 		return nil, errors.New("invalid 'quotation' setting")
 	}
 
-	enabled := m.Pattern != "" || quote != 0 || m.StartPattern != "" || m.EndPattern != "" || m.ReplacePattern != ""
+	enabled := m.Pattern != "" || quote != 0 || m.StartPattern != "" || m.EndPattern != ""
 	if m.Timeout == nil || time.Duration(*m.Timeout).Nanoseconds() == int64(0) {
 		d := config.Duration(5 * time.Second)
 		m.Timeout = &d
@@ -125,10 +115,6 @@ func (m *Multiline) IsEnabled() bool {
 }
 
 func (m *Multiline) ProcessLine(text string, buffer *bytes.Buffer) string {
-	if m.replacePatternRegexp != nil {
-		text = m.replacePatternRegexp.ReplaceAllString(text, m.config.Replacement)
-	}
-
 	if m.startPatternRegexp != nil && m.endPatternRegexp != nil {
 		if m.startedMatch {
 			if m.endPatternRegexp.MatchString(text) {
