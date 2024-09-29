@@ -111,7 +111,8 @@ build-docker:
 	docker buildx build --platform linux/amd64 -t megaease/telegraf:$(version) -f build/package/Dockerfile --load .
 
 build-docker-fromlocal:
-	docker buildx build --platform linux/amd64 -t megaease/telegraf:$(version) -f build/package/Dockerfile.fromlocal .
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(BUILDTAGS)" -ldflags "$(LDFLAGS)" ./cmd/telegraf
+	docker buildx build --platform linux/amd64 -t megaease/telegraf:$(version) -f build/package/Dockerfile.fromlocal --load .
 
 .PHONY: deps
 deps:
