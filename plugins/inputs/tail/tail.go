@@ -56,6 +56,7 @@ type Tail struct {
 	PathTag             string   `toml:"path_tag"`
 	ReplacePattern      string   `toml:"replace_pattern"`
 	Replacement         string   `toml:"replacement"`
+	MaxBytesPerLine     int      `toml:"max_bytes_per_line"`
 
 	replacePatternRegexp *regexp.Regexp
 
@@ -92,6 +93,7 @@ func NewTail() *Tail {
 		MaxUndeliveredLines: 1000,
 		offsets:             offsetsCopy,
 		PathTag:             "path",
+		MaxBytesPerLine:     100 * 1000, // a little smaller than 100KB
 	}
 }
 
@@ -228,13 +230,14 @@ func (t *Tail) tailNewFiles(fromBeginning bool) error {
 						r, _ := utfbom.Skip(t.decoder.Reader(rd))
 						return r
 					},
+					MaxLineSize: t.MaxBytesPerLine,
 				})
 			if err != nil {
 				t.Log.Debugf("Failed to open file (%s): %v", file, err)
 				continue
 			}
 
-			t.Log.Debugf("Tail added for %q", file)
+			t.Log.Debugf("Tail added for %q, max line size %d", file, t.MaxBytesPerLine)
 
 			parser, err := t.parserFunc()
 			if err != nil {
@@ -363,6 +366,11 @@ func (t *Tail) receiver(parser telegraf.Parser, tailer *tail.Tail) {
 				t.Log.Errorf("Cannot strip ansi colors from %s: %s", text, err)
 			}
 			text = string(out)
+		}
+
+		if t.MaxBytesPerLine > 0 && len(text) > t.MaxBytesPerLine {
+			t.Log.Errorf("Log line too long %d bytes in %q: %q", t.MaxBytesPerLine, tailer.Filename, text)
+			continue
 		}
 
 		var metrics []telegraf.Metric
